@@ -1,0 +1,51 @@
+.catalog:
+  name: "IngreB2B"
+  version: "1.0.2"
+  description: "IngreB2B instance"
+  uuid: ingreb2b-0
+  questions:
+    - variable: POSTGRES_PASSWORD
+      description: "Default password for `postgres` user"
+      label: "Postgres password"
+      required: true
+      default: ""
+      type: "string"
+    - variable: DOMAIN_NAME
+      description: "Project domain name f.i. `demo.ingre24.pl`"
+      label: "Domain name"
+      required: true
+      default: ""
+      type: "string"
+    - variable: API_SECRET_KEY
+      description: "API SECRET_KEY"
+      label: "API SECRET_KEY"
+      required: true
+      default: ""
+      type: "string"
+    - variable: API_ADMIN_CLIENT_ID
+      description: "API client id"
+      label: "API client id"
+      required: true
+      default: ""
+      type: "string"
+    - variable: API_ADMIN_CLIENT_SECRET
+      description: "API client secret"
+      label: "API client secret"
+      required: true
+      default: ""
+      type: "string"
+    - variable: SUPERVISOR_PASSWORD
+      description: "Supervisor password"
+      label: "Supervisor password"
+      required: true
+      default: ""
+      type: "string"
+
+api:
+  scale: 1
+
+backend:
+  scale: 1
+
+postgres:
+  scale: 1

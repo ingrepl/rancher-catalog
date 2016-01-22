@@ -1,0 +1,98 @@
+redis:
+  image: redis
+  labels:
+    io.rancher.container.hostname_override: container_name
+
+api:
+  image: ingre/api
+  links:
+    - postgres
+    - redis
+  volumes:
+    - /etc/localtime:/etc/localtime:ro
+  environment:
+    POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+    DATABASE_URI: "postgres://postgres:${POSTGRES_PASSWORD}@postgres/backend"
+    BASE_URL: "http://api.${DOMAIN_NAME}"
+    SECRET_KEY: "${API_SECRET_KEY}"
+    API_ADMIN_CLIENT_ID: "${API_ADMIN_CLIENT_ID}"
+    API_ADMIN_CLIENT_SECRET: "${API_ADMIN_CLIENT_SECRET}"
+    SENTRY_DSN: "requests+http://xxx:xxx@sentry:9000/4"
+    SMTP_URI: "smtp://mail:25/"
+  labels:
+    io.rancher.container.hostname_override: container_name
+    io.rancher.sidekicks: api-install
+
+api-install:
+  image: ingre/api
+  command: /app/install.sh
+  links:
+    - postgres
+  environment:
+    POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+    DATABASE_URI: "postgres://postgres:${POSTGRES_PASSWORD}@postgres/backend"
+    BASE_URL: "http://api.${DOMAIN_NAME}"
+    SECRET_KEY: "${API_SECRET_KEY}"
+    API_ADMIN_CLIENT_ID: "${API_ADMIN_CLIENT_ID}"
+    API_ADMIN_CLIENT_SECRET: "${API_ADMIN_CLIENT_SECRET}"
+    SENTRY_DSN: "requests+http://xxx:xxx@sentry:9000/4"
+    SMTP_URI: "smtp://mail:25/"
+  labels:
+    io.rancher.container.hostname_override: container_name
+    io.rancher.container.start_once: true
+
+postgres:
+  image: ingre/postgresql
+  environment:
+    POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+  volumes_from:
+    - postgres-data
+  labels:
+    io.rancher.container.hostname_override: container_name
+    io.rancher.sidekicks: postgres-data
+
+postgres-data:
+  image: busybox
+  volumes:
+    - /etc/localtime:/etc/localtime:ro
+    - /var/lib/postgresql/data
+  labels:
+    io.rancher.container.hostname_override: container_name
+    io.rancher.container.start_once: true
+
+backend:
+  image: ingre/backend
+  links:
+    - redis
+    - postgres
+    - api
+
+  environment:
+    POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+    SUPERVISOR_PASSWORD: "${SUPERVISOR_PASSWORD}"
+
+    SENTRY_DSN: ''
+
+    EMAIL_HOST: 'mail'
+    EMAIL_FROM: 'contact@${DOMAIN_NAME}'
+
+    API_CLIENT_ID: "${API_ADMIN_CLIENT_ID}"
+    API_CLIENT_SECRET: "${API_ADMIN_CLIENT_SECRET}"
+    API_CLIENT_URL: 'http://api/'
+
+  volumes:
+    - /etc/localtime:/etc/localtime:ro
+    - /app/plugins
+  volumes_from:
+    - uploads-data
+  labels:
+    io.rancher.container.hostname_override: container_name
+    io.rancher.sidekicks: uploads-data
+
+uploads-data:
+  image: busybox
+  volumes:
+    - /uploads
+  labels:
+    io.rancher.container.hostname_override: container_name
+    io.rancher.container.start_once: true
